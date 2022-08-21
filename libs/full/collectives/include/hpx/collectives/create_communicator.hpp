@@ -1,4 +1,4 @@
-//  Copyright (c) 2020-2021 Hartmut Kaiser
+//  Copyright (c) 2020-2022 Hartmut Kaiser
 //
 //  SPDX-License-Identifier: BSL-1.0
 //  Distributed under the Boost Software License, Version 1.0. (See accompanying
@@ -11,6 +11,7 @@
 #include <hpx/config.hpp>
 
 #if defined(DOXYGEN)
+
 // clang-format off
 namespace hpx { namespace collectives {
 
@@ -86,24 +87,32 @@ namespace hpx { namespace collectives {
           : base_type(HPX_MOVE(id))
         {
         }
-        explicit communicator(future<hpx::id_type>&& id) noexcept
+        explicit communicator(future<hpx::id_type>&& id,
+            num_sites_arg num_sites = {}, this_site_arg this_site = {}) noexcept
           : base_type(HPX_MOVE(id))
+          , num_sites_(num_sites)
+          , this_site_(this_site)
         {
         }
-        communicator(future<communicator>&& c)
+        communicator(future<communicator>&& c, num_sites_arg num_sites = {},
+            this_site_arg this_site = {})
           : base_type(HPX_MOVE(c))
+          , num_sites_(num_sites)
+          , this_site_(this_site)
         {
         }
 
-        void set_info(std::size_t num_sites, std::size_t this_site) noexcept
+        void set_info(num_sites_arg num_sites, this_site_arg this_site) noexcept
         {
             num_sites_ = num_sites;
             this_site_ = this_site;
         }
 
-        std::pair<std::size_t, std::size_t> get_info() const noexcept
+        constexpr std::pair<num_sites_arg, this_site_arg> get_info()
+            const noexcept
         {
-            return std::make_pair(num_sites_, this_site_);
+            return std::make_pair(
+                num_sites_arg(num_sites_), this_site_arg(this_site_));
         }
 
         bool is_root() const
@@ -118,10 +127,8 @@ namespace hpx { namespace collectives {
 
     ///////////////////////////////////////////////////////////////////////////
     HPX_EXPORT communicator create_communicator(char const* basename,
-        num_sites_arg num_sites = num_sites_arg(),
-        this_site_arg this_site = this_site_arg(),
-        generation_arg generation = generation_arg(),
-        root_site_arg root_site = root_site_arg());
+        num_sites_arg num_sites = {}, this_site_arg this_site = {},
+        generation_arg generation = {}, root_site_arg root_site = {});
 
 }}    // namespace hpx::collectives
 

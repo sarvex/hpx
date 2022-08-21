@@ -49,8 +49,7 @@ namespace hpx { namespace traits {
 
     ///////////////////////////////////////////////////////////////////////////
     template <typename Derived>
-    struct is_client<Derived,
-        typename util::always_void<typename Derived::is_client_tag>::type>
+    struct is_client<Derived, std::void_t<typename Derived::is_client_tag>>
       : std::true_type
     {
     };

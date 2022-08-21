@@ -685,6 +685,7 @@ namespace hpx { namespace util {
       : extra_static_ini_defs(extra_static_ini_defs_)
       , mode_(mode)
       , num_localities(0)
+      , locality(std::uint32_t(-1))
       , num_os_threads(0)
       , small_stacksize(HPX_SMALL_STACK_SIZE)
       , medium_stacksize(HPX_MEDIUM_STACK_SIZE)
@@ -795,6 +796,21 @@ namespace hpx { namespace util {
 
         HPX_ASSERT(num_localities != 0);
         return num_localities;
+    }
+
+    std::uint32_t runtime_configuration::get_locality() const
+    {
+        if (locality == std::uint32_t(-1))
+        {
+            if (util::section const* sec = get_section("hpx"); nullptr != sec)
+            {
+                locality =
+                    hpx::util::get_entry_as<std::uint32_t>(*sec, "locality", 0);
+            }
+        }
+
+        HPX_ASSERT(locality != std::uint32_t(-1));
+        return locality;
     }
 
     void runtime_configuration::set_num_localities(

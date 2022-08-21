@@ -49,42 +49,39 @@ namespace hpx { namespace lcos { namespace detail {
 
     template <typename Func, typename Future, typename Continuation>
     void invoke_continuation_nounwrap(
-        Func& func, Future&& future, Continuation& cont, std::false_type)
+        Func& func, Future&& future, Continuation& cont)
     {
-        hpx::intrusive_ptr<Continuation> keep_alive(&cont);
-        hpx::detail::try_catch_exception_ptr(
-            [&]() { cont.set_value(func(HPX_FORWARD(Future, future))); },
-            [&](std::exception_ptr ep) { cont.set_exception(HPX_MOVE(ep)); });
-    }
+        constexpr bool is_void =
+            std::is_void_v<util::invoke_result_t<Func, Future>>;
 
-    template <typename Func, typename Future, typename Continuation>
-    void invoke_continuation_nounwrap(
-        Func& func, Future&& future, Continuation& cont, std::true_type)
-    {
         hpx::intrusive_ptr<Continuation> keep_alive(&cont);
         hpx::detail::try_catch_exception_ptr(
             [&]() {
-                func(HPX_FORWARD(Future, future));
-                cont.set_value(util::unused);
+                if constexpr (is_void)
+                {
+                    func(HPX_FORWARD(Future, future));
+                    cont.set_value(util::unused);
+                }
+                else
+                {
+                    cont.set_value(func(HPX_FORWARD(Future, future)));
+                }
             },
             [&](std::exception_ptr ep) { cont.set_exception(HPX_MOVE(ep)); });
     }
 
     template <typename Func, typename Future, typename Continuation>
-    std::enable_if_t<!traits::detail::is_unique_future<
-        util::invoke_result_t<Func, Future>>::value>
+    std::enable_if_t<!traits::detail::is_unique_future_v<
+        util::invoke_result_t<Func, Future>>>
     invoke_continuation(Func& func, Future&& future, Continuation& cont)
     {
-        using is_void = std::is_void<util::invoke_result_t<Func, Future>>;
-
         hpx::scoped_annotation annotate(func);
-        invoke_continuation_nounwrap(
-            func, HPX_FORWARD(Future, future), cont, is_void());
+        invoke_continuation_nounwrap(func, HPX_FORWARD(Future, future), cont);
     }
 
     template <typename Func, typename Future, typename Continuation>
-    std::enable_if_t<traits::detail::is_unique_future<
-        util::invoke_result_t<Func, Future>>::value>
+    std::enable_if_t<
+        traits::detail::is_unique_future_v<util::invoke_result_t<Func, Future>>>
     invoke_continuation(Func& func, Future&& future, Continuation& cont)
     {
         hpx::detail::try_catch_exception_ptr(
@@ -164,7 +161,7 @@ namespace hpx { namespace lcos { namespace detail {
 
         template <typename Func,
             typename Enable = std::enable_if_t<
-                !std::is_same<std::decay_t<Func>, continuation>::value>>
+                !std::is_same_v<std::decay_t<Func>, continuation>>>
         // NOLINTNEXTLINE(bugprone-forwarding-reference-overload)
         continuation(Func&& f)
           : started_(false)
@@ -192,11 +189,8 @@ namespace hpx { namespace lcos { namespace detail {
         void run_impl_nounwrap(
             traits::detail::shared_state_ptr_for_t<Future>&& f)
         {
-            using is_void = std::is_void<util::invoke_result_t<F, Future>>;
-
             Future future = traits::future_access<Future>::create(HPX_MOVE(f));
-            invoke_continuation_nounwrap(
-                f_, HPX_MOVE(future), *this, is_void{});
+            invoke_continuation_nounwrap(f_, HPX_MOVE(future), *this);
         }
 
     public:
@@ -253,13 +247,10 @@ namespace hpx { namespace lcos { namespace detail {
         void async_impl_nounwrap(
             traits::detail::shared_state_ptr_for_t<Future>&& f)
         {
-            using is_void = std::is_void<util::invoke_result_t<F, Future>>;
-
             reset_id r(*this);
 
             Future future = traits::future_access<Future>::create(HPX_MOVE(f));
-            invoke_continuation_nounwrap(
-                f_, HPX_MOVE(future), *this, is_void{});
+            invoke_continuation_nounwrap(f_, HPX_MOVE(future), *this);
         }
 
     public:

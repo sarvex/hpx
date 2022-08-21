@@ -1,4 +1,4 @@
-//  Copyright (c) 2007-2012 Hartmut Kaiser
+//  Copyright (c) 2007-2022 Hartmut Kaiser
 //  Copyright (c) 2006 Joao Abecasis
 //
 //  SPDX-License-Identifier: BSL-1.0
@@ -27,6 +27,14 @@
 // clang-format on
 
 namespace hpx { namespace util {
+
+    enum class reinitializable_static_init_mode
+    {
+        default_,
+        value,
+        function
+    };
+
     ///////////////////////////////////////////////////////////////////////////
     //  Provides thread-safe initialization of a single static instance of T.
     //
@@ -39,36 +47,48 @@ namespace hpx { namespace util {
     //  In addition this type registers global construction and destruction
     //  functions used by the HPX runtime system to reinitialize the held data
     //  structures.
-    template <typename T, typename Tag = T, std::size_t N = 1>
+    template <typename T, typename Tag = T, std::size_t N = 1,
+        reinitializable_static_init_mode mode =
+            reinitializable_static_init_mode::value>
     struct HPX_CORE_EXPORT_REINITIALIZABLE_STATIC reinitializable_static;
 
     //////////////////////////////////////////////////////////////////////////
-    template <typename T, typename Tag, std::size_t N>
+    template <typename T, typename Tag, std::size_t N,
+        reinitializable_static_init_mode mode>
     struct HPX_CORE_EXPORT_REINITIALIZABLE_STATIC reinitializable_static
     {
+        static_assert(N != 0, "N must be non-zero");
+
     public:
         HPX_NON_COPYABLE(reinitializable_static);
 
     public:
-        typedef T value_type;
+        using value_type = T;
 
     private:
         static void default_construct()
         {
-            for (std::size_t i = 0; i < N; ++i)
+            for (std::size_t i = 0; i != N; ++i)
                 new (get_address(i)) value_type();
         }
 
         template <typename U>
         static void value_construct(U const& v)
         {
-            for (std::size_t i = 0; i < N; ++i)
+            for (std::size_t i = 0; i != N; ++i)
                 new (get_address(i)) value_type(v);
+        }
+
+        template <typename F>
+        static void function_construct(F const& f)
+        {
+            for (std::size_t i = 0; i != N; ++i)
+                new (get_address(i)) value_type(f());
         }
 
         static void destruct()
         {
-            for (std::size_t i = 0; i < N; ++i)
+            for (std::size_t i = 0; i != N; ++i)
                 get_address(i)->~value_type();
         }
 
@@ -90,9 +110,19 @@ namespace hpx { namespace util {
                 &reinitializable_static::destruct);
         }
 
+        template <typename F>
+        static void function_constructor(F const& f)
+        {
+            function_construct(f);
+            reinit_register(
+                hpx::bind_front(
+                    &reinitializable_static::template function_construct<F>, f),
+                &reinitializable_static::destruct);
+        }
+
     public:
-        typedef T& reference;
-        typedef T const& const_reference;
+        using reference = T&;
+        using const_reference = T const&;
 
         reinitializable_static()
         {
@@ -108,10 +138,28 @@ namespace hpx { namespace util {
         {
 #if !defined(__CUDACC__)
             // do not rely on ADL to find the proper call_once
-            std::call_once(constructed_,
-                hpx::bind_front(
-                    &reinitializable_static::template value_constructor<U>,
-                    const_cast<U const*>(std::addressof(val))));
+            if constexpr (mode == reinitializable_static_init_mode::default_)
+            {
+                std::call_once(
+                    constructed_, &reinitializable_static::default_constructor);
+            }
+            else if constexpr (mode == reinitializable_static_init_mode::value)
+            {
+                std::call_once(constructed_,
+                    hpx::bind_front(
+                        &reinitializable_static::template value_constructor<U>,
+                        const_cast<U const*>(std::addressof(val))));
+            }
+            else
+            {
+                static_assert(
+                    mode == reinitializable_static_init_mode::function);
+                std::call_once(constructed_,
+                    hpx::bind_front(
+                        &reinitializable_static::template function_constructor<
+                            U>,
+                        val));
+            }
 #else
             HPX_UNUSED(val);
 #endif
@@ -138,7 +186,7 @@ namespace hpx { namespace util {
         }
 
     private:
-        typedef typename std::add_pointer<value_type>::type pointer;
+        using pointer = std::add_pointer_t<value_type>;
 
         static pointer get_address(std::size_t item)
         {
@@ -146,19 +194,21 @@ namespace hpx { namespace util {
             return reinterpret_cast<pointer>(data_ + item);
         }
 
-        typedef typename std::aligned_storage<sizeof(value_type),
-            std::alignment_of<value_type>::value>::type storage_type;
+        using storage_type = std::aligned_storage_t<sizeof(value_type),
+            std::alignment_of_v<value_type>>;
 
         static storage_type data_[N];
         static std::once_flag constructed_;
     };
 
-    template <typename T, typename Tag, std::size_t N>
-    typename reinitializable_static<T, Tag, N>::storage_type
-        reinitializable_static<T, Tag, N>::data_[N];
+    template <typename T, typename Tag, std::size_t N,
+        reinitializable_static_init_mode mode>
+    typename reinitializable_static<T, Tag, N, mode>::storage_type
+        reinitializable_static<T, Tag, N, mode>::data_[N];
 
-    template <typename T, typename Tag, std::size_t N>
-    std::once_flag reinitializable_static<T, Tag, N>::constructed_;
+    template <typename T, typename Tag, std::size_t N,
+        reinitializable_static_init_mode mode>
+    std::once_flag reinitializable_static<T, Tag, N, mode>::constructed_;
 }}    // namespace hpx::util
 
 #undef HPX_CORE_EXPORT_REINITIALIZABLE_STATIC

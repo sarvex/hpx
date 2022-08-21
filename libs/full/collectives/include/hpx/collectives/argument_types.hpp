@@ -1,4 +1,4 @@
-//  Copyright (c) 2021 Hartmut Kaiser
+//  Copyright (c) 2021-2022 Hartmut Kaiser
 //
 //  SPDX-License-Identifier: BSL-1.0
 //  Distributed under the Boost Software License, Version 1.0. (See accompanying
@@ -17,8 +17,9 @@ namespace hpx { namespace collectives {
 
     struct num_sites_arg
     {
-        explicit constexpr num_sites_arg(
-            std::size_t num_sites = std::size_t(-1)) noexcept
+        constexpr num_sites_arg() noexcept = default;
+
+        explicit constexpr num_sites_arg(std::size_t num_sites) noexcept
           : num_sites_(num_sites)
         {
         }
@@ -34,13 +35,14 @@ namespace hpx { namespace collectives {
             return num_sites_;
         }
 
-        std::size_t num_sites_;
+        std::size_t num_sites_ = std::size_t(-1);
     };
 
     struct this_site_arg
     {
-        explicit constexpr this_site_arg(
-            std::size_t this_site = std::size_t(-1)) noexcept
+        constexpr this_site_arg() noexcept = default;
+
+        explicit constexpr this_site_arg(std::size_t this_site) noexcept
           : this_site_(this_site)
         {
         }
@@ -56,13 +58,14 @@ namespace hpx { namespace collectives {
             return this_site_;
         }
 
-        std::size_t this_site_;
+        std::size_t this_site_ = std::size_t(-1);
     };
 
     struct that_site_arg
     {
-        explicit constexpr that_site_arg(
-            std::size_t that_site = std::size_t(-1)) noexcept
+        constexpr that_site_arg() noexcept = default;
+
+        explicit constexpr that_site_arg(std::size_t that_site) noexcept
           : that_site_(that_site)
         {
         }
@@ -78,13 +81,14 @@ namespace hpx { namespace collectives {
             return that_site_;
         }
 
-        std::size_t that_site_;
+        std::size_t that_site_ = std::size_t(-1);
     };
 
     struct generation_arg
     {
-        explicit constexpr generation_arg(
-            std::size_t generation = std::size_t(-1)) noexcept
+        constexpr generation_arg() noexcept = default;
+
+        explicit constexpr generation_arg(std::size_t generation) noexcept
           : generation_(generation)
         {
         }
@@ -100,13 +104,14 @@ namespace hpx { namespace collectives {
             return generation_;
         }
 
-        std::size_t generation_;
+        std::size_t generation_ = std::size_t(-1);
     };
 
     struct root_site_arg
     {
-        explicit constexpr root_site_arg(
-            std::size_t root_site = std::size_t(0)) noexcept
+        constexpr root_site_arg() noexcept = default;
+
+        explicit constexpr root_site_arg(std::size_t root_site) noexcept
           : root_site_(root_site)
         {
         }
@@ -122,12 +127,14 @@ namespace hpx { namespace collectives {
             return root_site_;
         }
 
-        std::size_t root_site_;
+        std::size_t root_site_ = std::size_t(-1);
     };
 
     struct tag_arg
     {
-        explicit constexpr tag_arg(std::size_t tag = std::size_t(0)) noexcept
+        constexpr tag_arg() noexcept = default;
+
+        explicit constexpr tag_arg(std::size_t tag) noexcept
           : tag_(tag)
         {
         }
@@ -143,6 +150,6 @@ namespace hpx { namespace collectives {
             return tag_;
         }
 
-        std::size_t tag_;
+        std::size_t tag_ = std::size_t(-1);
     };
 }}    // namespace hpx::collectives

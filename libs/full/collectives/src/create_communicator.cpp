@@ -1,4 +1,4 @@
-//  Copyright (c) 2020-2021 Hartmut Kaiser
+//  Copyright (c) 2020-2022 Hartmut Kaiser
 //
 //  SPDX-License-Identifier: BSL-1.0
 //  Distributed under the Boost Software License, Version 1.0. (See accompanying
@@ -51,9 +51,13 @@ namespace hpx { namespace collectives {
                 root_site = this_site;
             }
         }
+        if (root_site == std::size_t(-1))
+        {
+            root_site = 0;
+        }
 
         HPX_ASSERT(this_site < num_sites);
-        HPX_ASSERT(root_site != std::size_t(-1) && root_site < num_sites);
+        HPX_ASSERT(root_site < num_sites);
 
         std::string name(basename);
         if (generation != std::size_t(-1))
@@ -65,6 +69,7 @@ namespace hpx { namespace collectives {
         {
             // create a new communicator
             communicator c = hpx::local_new<communicator>(num_sites);
+            c.set_info(num_sites, this_site);
 
             // register the communicator's id using the given basename,
             // this keeps the communicator alive
@@ -83,13 +88,13 @@ namespace hpx { namespace collectives {
                                 "operation was already registered: {}",
                                 target.registered_name()));
                     }
-                    target.set_info(num_sites, this_site);
                     return target;
                 });
         }
 
         // find existing communicator
-        return hpx::find_from_basename<communicator>(HPX_MOVE(name), root_site);
+        return hpx::find_from_basename<communicator>(
+            HPX_MOVE(name), root_site, num_sites, this_site);
     }
 }}    // namespace hpx::collectives
 

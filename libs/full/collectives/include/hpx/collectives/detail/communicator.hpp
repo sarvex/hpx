@@ -179,9 +179,11 @@ namespace hpx { namespace collectives { namespace detail {
         // set or get).
         //
         // Finalizer will be invoked under lock after all sites have checked in.
-        template <typename Data, typename Step, typename Finalizer>
-        auto handle_data(std::size_t which, std::size_t generation, Step&& step,
-            Finalizer&& finalizer, std::size_t num_values = std::size_t(-1))
+        template <typename Data, typename Step = std::nullptr_t,
+            typename Finalizer = std::nullptr_t>
+        auto handle_data(std::size_t which, std::size_t generation,
+            Step&& step = nullptr, Finalizer&& finalizer = nullptr,
+            std::size_t num_values = std::size_t(-1))
         {
             auto on_ready = [this, num_values,
                                 finalizer = HPX_FORWARD(Finalizer, finalizer)](
