@@ -34,7 +34,17 @@ namespace hpx { namespace execution {
     /// Default sequential execution policy object.
     inline constexpr hpx::execution::experimental::to_task_t task{};
 
+    using task_policy_tag HPX_DEPRECATED_V(1, 9,
+        "hpx::execution::task_policy_tag is deprecated, use "
+        "hpx::execution::experimental::to_task_t instead") =
+        hpx::execution::experimental::to_task_t;
+
     inline constexpr hpx::execution::experimental::to_non_task_t non_task{};
+
+    using non_task_policy_tag HPX_DEPRECATED_V(1, 9,
+        "hpx::execution::non_task_policy_tag is deprecated, use "
+        "hpx::execution::experimental::to_non_task_t instead") =
+        hpx::execution::experimental::to_non_task_t;
 
     namespace detail {
         template <typename T, typename Enable = void>
