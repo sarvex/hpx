@@ -158,7 +158,8 @@ namespace hpx { namespace detail {
             }
 
             // create our global barrier...
-            hpx::distributed::barrier::get_global_barrier();
+            hpx::distributed::barrier::get_global_barrier() =
+                hpx::distributed::barrier::create_global_barrier();
 
             // Second stage bootstrap synchronizes component loading across all
             // localities, ensuring that the component namespace tables are fully

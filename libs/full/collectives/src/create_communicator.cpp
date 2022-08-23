@@ -46,10 +46,6 @@ namespace hpx { namespace collectives {
         if (this_site == std::size_t(-1))
         {
             this_site = static_cast<std::size_t>(agas::get_locality_id());
-            if (root_site == std::size_t(-1))
-            {
-                root_site = this_site;
-            }
         }
         if (root_site == std::size_t(-1))
         {

@@ -352,7 +352,6 @@ namespace hpx {
       , stop_done_(false)
     {
         init_global_data();
-        util::reinit_construct();
 
         LPROGRESS_;
     }

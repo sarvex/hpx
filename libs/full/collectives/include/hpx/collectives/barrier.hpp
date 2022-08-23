@@ -16,7 +16,6 @@
 #include <hpx/futures/future.hpp>
 #include <hpx/modules/memory.hpp>
 
-#include <atomic>
 #include <cstddef>
 #include <string>
 #include <utility>
@@ -38,7 +37,9 @@ namespace hpx::distributed {
         ///
         /// \param base_name The name of the barrier
         /// \param generation An optional generational sequence number used to
-        ///                   distinguish the created communictator
+        ///                   distinguish the created communicator
+        /// \param root_site The root locality that controls the barrier (default
+        ///                  is locality 0)
         ///
         /// A barrier \a base_name is created. It expects that
         /// hpx::get_num_localities() participate and the local rank is
@@ -46,14 +47,17 @@ namespace hpx::distributed {
         ///
         barrier(std::string const& base_name,
             hpx::collectives::generation_arg generation = {},
-            hpx::collectives::root_site_arg root_site = {});
+            hpx::collectives::root_site_arg root_site =
+                hpx::collectives::root_site_arg(0));
 
         /// Creates a barrier with a given size, rank is locality id
         ///
         /// \param base_name The name of the barrier
         /// \param num The number of participating threads
         /// \param generation An optional generational sequence number used to
-        ///                   distinguish the created communictator
+        ///                   distinguish the created communicator
+        /// \param root_site The root locality that controls the barrier (default
+        ///                  is locality 0)
         ///
         /// A barrier \a base_name is created. It expects that \a num
         /// participate and the local rank is hpx::get_locality_id().
@@ -61,7 +65,8 @@ namespace hpx::distributed {
         barrier(std::string const& base_name,
             hpx::collectives::num_sites_arg num,
             hpx::collectives::generation_arg generation = {},
-            hpx::collectives::root_site_arg root_site = {});
+            hpx::collectives::root_site_arg root_site =
+                hpx::collectives::root_site_arg(0));
 
         HPX_DEPRECATED_V(1, 9,
             "this barrier::barrier constructor is deprecated, use the "
@@ -77,7 +82,9 @@ namespace hpx::distributed {
         /// \param num The number of participating threads
         /// \param rank The rank of the calling site for this invocation
         /// \param generation An optional generational sequence number used to
-        ///                   distinguish the created communictator
+        ///                   distinguish the created communicator
+        /// \param root_site The root locality that controls the barrier (default
+        ///                  is locality 0)
         ///
         /// A barrier \a base_name is created. It expects that
         /// \a num participate and the local rank is \a rank.
@@ -86,7 +93,8 @@ namespace hpx::distributed {
             hpx::collectives::num_sites_arg num,
             hpx::collectives::this_site_arg rank,
             hpx::collectives::generation_arg generation = {},
-            hpx::collectives::root_site_arg root_site = {});
+            hpx::collectives::root_site_arg root_site =
+                hpx::collectives::root_site_arg(0));
 
         HPX_DEPRECATED_V(1, 9,
             "this barrier::barrier constructor is deprecated, use the "
@@ -141,6 +149,7 @@ namespace hpx::distributed {
         /// \cond NOINTERNAL
         // Get the instance of the global barrier
         static barrier& get_global_barrier();
+        static barrier create_global_barrier();
 
         // detach the communicator
         void detach();
@@ -164,7 +173,7 @@ namespace hpx::distributed {
         /// \cond NOINTERNAL
         barrier();
 
-        std::atomic<std::size_t> generation_{0};
+        std::size_t generation_ = 0;
 #if !defined(HPX_COMPUTE_DEVICE_CODE)
         hpx::collectives::communicator comm_;
 #endif

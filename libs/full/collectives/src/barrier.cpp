@@ -63,9 +63,9 @@ namespace hpx { namespace distributed {
     {
 #if !defined(HPX_COMPUTE_DEVICE_CODE)
         hpx::traits::detail::get_shared_state(comm_)->set_on_completed(
-            [this]() {
-                comm_.set_info(coll::num_sites_arg(
-                                   agas::get_num_localities(hpx::launch::sync)),
+            [comm = comm_]() mutable {
+                comm.set_info(coll::num_sites_arg(
+                                  agas::get_num_localities(hpx::launch::sync)),
                     coll::this_site_arg(agas::get_locality_id()));
             });
 #else
@@ -85,8 +85,8 @@ namespace hpx { namespace distributed {
     {
 #if !defined(HPX_COMPUTE_DEVICE_CODE)
         hpx::traits::detail::get_shared_state(comm_)->set_on_completed(
-            [this, num]() {
-                comm_.set_info(
+            [comm = comm_, num]() mutable {
+                comm.set_info(
                     num, coll::this_site_arg(agas::get_locality_id()));
             });
 #else
@@ -108,7 +108,7 @@ namespace hpx { namespace distributed {
     {
 #if !defined(HPX_COMPUTE_DEVICE_CODE)
         hpx::traits::detail::get_shared_state(comm_)->set_on_completed(
-            [this, num, rank]() { this->comm_.set_info(num, rank); });
+            [comm = comm_, num, rank]() mutable { comm.set_info(num, rank); });
 #else
         HPX_UNUSED(basename);
         HPX_UNUSED(num);
@@ -140,6 +140,7 @@ namespace hpx { namespace distributed {
     {
 #if !defined(HPX_COMPUTE_DEVICE_CODE)
         comm_.free();
+        generation_ = 0;
 #endif
     }
 
@@ -160,7 +161,8 @@ namespace hpx { namespace distributed {
 
         if (generation != std::size_t(-1))
         {
-            std::size_t prev_generation = generation_.exchange(generation);
+            std::size_t prev_generation =
+                std::exchange(generation_, generation);
             if (prev_generation >= generation)
             {
                 return hpx::make_exceptional_future<void>(HPX_GET_EXCEPTION(
@@ -200,7 +202,7 @@ namespace hpx { namespace distributed {
 #endif
     }
 
-    static barrier create_global_barrier()
+    barrier barrier ::create_global_barrier()
     {
         runtime& rt = get_runtime();
         util::runtime_configuration const& cfg = rt.get_config();
@@ -209,18 +211,10 @@ namespace hpx { namespace distributed {
             coll::this_site_arg(cfg.get_locality()));
     }
 
-    struct barrier_tag
-    {
-    };
-
     barrier& barrier::get_global_barrier()
     {
-        using static_type =
-            hpx::util::reinitializable_static<barrier, barrier_tag, 1,
-                hpx::util::reinitializable_static_init_mode::function>;
-
-        static_type b(&create_global_barrier);
-        return b.get();
+        static barrier b;
+        return b;
     }
 
     void barrier::synchronize(coll::generation_arg generation)
