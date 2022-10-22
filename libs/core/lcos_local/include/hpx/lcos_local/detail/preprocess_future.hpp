@@ -1,4 +1,4 @@
-//  Copyright (c) 2015-2021 Hartmut Kaiser
+//  Copyright (c) 2015-2022 Hartmut Kaiser
 //  Copyright (c) 2015-2016 Thomas Heller
 //
 //  SPDX-License-Identifier: BSL-1.0
@@ -121,6 +121,16 @@ namespace hpx { namespace serialization { namespace detail {
                 done_ = false;
             }
             ++num_futures_;
+        }
+
+        void decrement_future_count()
+        {
+            std::lock_guard<mutex_type> l(mtx_);
+            HPX_ASSERT(num_futures_ > 0);
+            if (--num_futures_ == 0)
+            {
+                done_ = true;
+            }
         }
 
         void reset()

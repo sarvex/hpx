@@ -1,5 +1,5 @@
 //  Copyright (c) 2011 Bryce Adelstein-Lelbach
-//  Copyright (c) 2012-2021 Hartmut Kaiser
+//  Copyright (c) 2012-2022 Hartmut Kaiser
 //  Copyright (c) 2016 Thomas Heller
 //
 //  SPDX-License-Identifier: BSL-1.0
@@ -190,7 +190,8 @@ namespace hpx { namespace agas { namespace server {
                     // split the credit as the receiving end will expect to keep the
                     // object alive
                     naming::gid_type new_gid =
-                        naming::detail::split_gid_if_needed(*current_gid).get();
+                        naming::detail::split_gid_if_needed(
+                            hpx::launch::sync, *current_gid);
 
                     // trigger the lco
                     set_lco_value(id, new_gid);
@@ -237,8 +238,8 @@ namespace hpx { namespace agas { namespace server {
 
         l.unlock();
 
-        naming::gid_type gid =
-            naming::detail::split_gid_if_needed(*current_gid).get();
+        naming::gid_type gid = naming::detail::split_gid_if_needed(
+            hpx::launch::sync, *current_gid);
 
         LAGAS_(info).format(
             "symbol_namespace::resolve, key({1}), stored_gid({2}), gid({3})",
@@ -306,8 +307,8 @@ namespace hpx { namespace agas { namespace server {
                 std::shared_ptr<naming::gid_type> current_gid(it->second);
                 util::unlock_guard<std::unique_lock<mutex_type>> ul(l);
 
-                found[it->first] =
-                    naming::detail::split_gid_if_needed(*current_gid).get();
+                found[it->first] = naming::detail::split_gid_if_needed(
+                    hpx::launch::sync, *current_gid);
             }
         }
         else
@@ -323,8 +324,8 @@ namespace hpx { namespace agas { namespace server {
                 std::shared_ptr<naming::gid_type> current_gid(it->second);
                 util::unlock_guard<std::unique_lock<mutex_type>> ul(l);
 
-                found[it->first] =
-                    naming::detail::split_gid_if_needed(*current_gid).get();
+                found[it->first] = naming::detail::split_gid_if_needed(
+                    hpx::launch::sync, *current_gid);
             }
         }
 
@@ -357,8 +358,8 @@ namespace hpx { namespace agas { namespace server {
                 // object alive
                 {
                     util::unlock_guard<std::unique_lock<mutex_type>> ul(l);
-                    new_gid =
-                        naming::detail::split_gid_if_needed(*current_gid).get();
+                    new_gid = naming::detail::split_gid_if_needed(
+                        hpx::launch::sync, *current_gid);
 
                     // trigger the lco
                     handled = true;

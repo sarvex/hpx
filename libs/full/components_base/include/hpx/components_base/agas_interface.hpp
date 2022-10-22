@@ -1,5 +1,5 @@
 //  Copyright (c) 2011 Bryce Adelstein-Lelbach
-//  Copyright (c) 2007-2021 Hartmut Kaiser
+//  Copyright (c) 2007-2022 Hartmut Kaiser
 //
 //  SPDX-License-Identifier: BSL-1.0
 //  Distributed under the Boost Software License, Version 1.0. (See accompanying
@@ -150,6 +150,9 @@ namespace hpx { namespace agas {
     }
 
     ///////////////////////////////////////////////////////////////////////////
+    HPX_EXPORT hpx::future_or_value<naming::address> resolve_async(
+        hpx::id_type const& id);
+
     HPX_EXPORT hpx::future<naming::address> resolve(hpx::id_type const& id);
 
     HPX_EXPORT naming::address resolve(
@@ -225,8 +228,9 @@ namespace hpx { namespace agas {
         error_code& ec = throws);
 
     ///////////////////////////////////////////////////////////////////////////
-    HPX_EXPORT hpx::future<std::int64_t> incref(naming::gid_type const& gid,
-        std::int64_t credits, hpx::id_type const& keep_alive = hpx::invalid_id);
+    HPX_EXPORT hpx::future_or_value<std::int64_t> incref(
+        naming::gid_type const& gid, std::int64_t credits,
+        hpx::id_type const& keep_alive = hpx::invalid_id);
 
     HPX_EXPORT std::int64_t incref(launch::sync_policy,
         naming::gid_type const& gid, std::int64_t credits = 1,
@@ -237,7 +241,7 @@ namespace hpx { namespace agas {
     HPX_EXPORT std::int64_t replenish_credits(naming::gid_type& gid);
 
     ///////////////////////////////////////////////////////////////////////////
-    HPX_EXPORT hpx::future<hpx::id_type> get_colocation_id(
+    HPX_EXPORT hpx::future_or_value<id_type> get_colocation_id(
         hpx::id_type const& id);
 
     HPX_EXPORT hpx::id_type get_colocation_id(

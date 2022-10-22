@@ -1,11 +1,12 @@
 //  Copyright (c) 2011 Bryce Adelstein-Lelbach
-//  Copyright (c) 2007-2021 Hartmut Kaiser
+//  Copyright (c) 2007-2022 Hartmut Kaiser
 //
 //  SPDX-License-Identifier: BSL-1.0
 //  Distributed under the Boost Software License, Version 1.0. (See accompanying
 //  file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
 #include <hpx/modules/coroutines.hpp>
+#include <hpx/modules/datastructures.hpp>
 #include <hpx/modules/errors.hpp>
 #include <hpx/modules/functional.hpp>
 #include <hpx/modules/futures.hpp>
@@ -140,9 +141,19 @@ namespace hpx { namespace agas {
     }
 
     ///////////////////////////////////////////////////////////////////////////
-    hpx::future<naming::address> resolve(hpx::id_type const& id)
+    hpx::future_or_value<naming::address> resolve_async(hpx::id_type const& id)
     {
         return detail::resolve_async(id);
+    }
+
+    hpx::future<naming::address> resolve(hpx::id_type const& id)
+    {
+        auto result = detail::resolve_async(id);
+        if (result.has_value())
+        {
+            return hpx::make_ready_future(HPX_MOVE(result).get_value());
+        }
+        return HPX_MOVE(result).get_future();
     }
 
     naming::address resolve(
@@ -293,7 +304,7 @@ namespace hpx { namespace agas {
     }
 
     ///////////////////////////////////////////////////////////////////////////
-    hpx::future<std::int64_t> incref(naming::gid_type const& gid,
+    hpx::future_or_value<std::int64_t> incref(naming::gid_type const& gid,
         std::int64_t credits, hpx::id_type const& keep_alive)
     {
         return detail::incref_async(gid, credits, keep_alive);
@@ -302,7 +313,12 @@ namespace hpx { namespace agas {
     std::int64_t incref(launch::sync_policy, naming::gid_type const& gid,
         std::int64_t credits, hpx::id_type const& keep_alive, error_code& ec)
     {
-        return detail::incref(gid, credits, keep_alive, ec);
+        auto result = detail::incref_async(gid, credits, keep_alive);
+        if (result.has_value())
+        {
+            return HPX_MOVE(result).get_value();
+        }
+        return result.get_future().get(ec);
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -312,7 +328,7 @@ namespace hpx { namespace agas {
     }
 
     ///////////////////////////////////////////////////////////////////////////
-    hpx::future<hpx::id_type> get_colocation_id(hpx::id_type const& id)
+    hpx::future_or_value<id_type> get_colocation_id(hpx::id_type const& id)
     {
         return detail::get_colocation_id_async(id);
     }

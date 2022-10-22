@@ -10,6 +10,7 @@ set(futures_headers
     hpx/futures/future.hpp
     hpx/futures/future_fwd.hpp
     hpx/futures/futures_factory.hpp
+    hpx/futures/future_or_value.hpp
     hpx/futures/detail/future_data.hpp
     hpx/futures/detail/future_transforms.hpp
     hpx/futures/packaged_continuation.hpp
