@@ -25,8 +25,8 @@ namespace hpx {
         template <typename T, typename Enable = void>
         struct is_invocable_impl : std::false_type
         {
-            static_assert(std::is_function_v<T>,
-                "Argument must be of the form F(Ts...)");
+            static_assert(
+                std::is_function_v<T>, "Argument must be of the form F(Ts...)");
         };
 
         template <typename F, typename... Ts>
@@ -42,15 +42,17 @@ namespace hpx {
         {
         };
 
+        // clang-format off
         template <typename F, typename... Ts, typename R>
         struct is_invocable_r_impl<F(Ts...), R,
-            std::void_t<decltype(HPX_INVOKE(
-                std::declval<F>(), std::declval<Ts>()...))>>
+            std::void_t<decltype(
+                HPX_INVOKE(std::declval<F>(), std::declval<Ts>()...))>>
           : std::integral_constant<bool,
                 std::is_void_v<R> ||
                     std::is_convertible_v<decltype(HPX_INVOKE(std::declval<F>(),
                                               std::declval<Ts>()...)),
                         R>>
+        // clang-format on
         {
         };
     }    // namespace detail
