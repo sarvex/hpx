@@ -100,8 +100,8 @@ git config user.name "STE||AR Group"
 
 echo ""
 echo "Tagging release."
-git tag --sign --annotate "${VERSION_FULL_TAG}" --message="${VERSION_TITLE}"
-git push origin "${VERSION_FULL_TAG}"
+git tag --sign --annotate "v${VERSION_FULL_TAG}" --message="${VERSION_TITLE}"
+git push origin "v${VERSION_FULL_TAG}"
 
 echo ""
 echo "Creating release."
@@ -109,7 +109,7 @@ hub release create \
     ${PRERELEASE_FLAG} \
     --message "${VERSION_TITLE}" \
     --message "${VERSION_DESCRIPTION}" \
-    "${VERSION_FULL_TAG}"
+    "v${VERSION_FULL_TAG}"
 
 echo ""
 echo "Now add the above URL to the downloads pages on stellar.cct.lsu.edu and stellar-group.org."
