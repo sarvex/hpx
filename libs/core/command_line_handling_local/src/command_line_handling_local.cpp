@@ -556,7 +556,6 @@ namespace hpx::local::detail {
 
         pu_offset_ = detail::handle_pu_offset(cfgmap, vm, std::size_t(-1));
 
-        // NOLINTNEXTLINE(bugprone-branch-clone)
         if (pu_offset_ != std::size_t(-1))
         {
 #if defined(__APPLE__)
