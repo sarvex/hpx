@@ -45,11 +45,7 @@ def run(local, targets_and_opts):
         run_command = os.path.join(binary_dir, targets_and_opts)
         command += run_command.split()
 
-    if local:
-        output = runtools.run(command)
-    else:
-        output = runtools.srun(command)
-
+    output = runtools.run(command) if local else runtools.srun(command)
     data = json.loads(output)
 
     data[var._project_name] = {

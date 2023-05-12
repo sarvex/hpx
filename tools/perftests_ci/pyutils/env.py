@@ -29,8 +29,10 @@ def load(envfile):
     env.update(line.split('=', 1) for line in output.split('\0'))
 
     log.info(f'Loaded environment from {os.path.join(envdir, envfile)}')
-    log.debug(f'{"New environment"}',
-              '\n'.join(f'{k}={v}' for k, v in sorted(env.items())))
+    log.debug(
+        'New environment',
+        '\n'.join(f'{k}={v}' for k, v in sorted(env.items())),
+    )
 
 
 try:
@@ -49,13 +51,9 @@ def _items_with_tag(tag):
 def cmake_args():
     args = []
     for k, v in _items_with_tag('PYUTILS_').items():
-        if v.strip().upper() in ('ON', 'OFF'):
-            k += ':BOOL'
-        else:
-            k += ':STRING'
+        k += ':BOOL' if v.strip().upper() in ('ON', 'OFF') else ':STRING'
         args.append(f'-D{k}={v}')
-    for k, v in _items_with_tag('-G').items():
-        args.append(f'-G{k}')
+    args.extend(f'-G{k}' for k, v in _items_with_tag('-G').items())
     return args
 
 
@@ -71,13 +69,15 @@ def sbatch_options(mpi):
         options.update(_items_with_tag('GTRUNMPI_SBATCH_'))
 
     return [
-        '--' + k.lower().replace('_', '-') + ('=' + v if v else '')
+        '--' + k.lower().replace('_', '-') + (f'={v}' if v else '')
         for k, v in options.items()
     ]
 
 
 def build_command():
-    return env.get(var._project_name+'_BUILD_COMMAND', var._default_build_system).split()
+    return env.get(
+        f'{var._project_name}_BUILD_COMMAND', var._default_build_system
+    ).split()
 
 
 def hostname():
@@ -102,9 +102,9 @@ def clustername():
     """
     try:
         output = runtools.run(['scontrol', 'show', 'config'])
-        m = re.compile(r'.*ClusterName\s*=\s*(\S*).*',
-                       re.MULTILINE | re.DOTALL).match(output)
-        if m:
-            return m.group(1)
+        if m := re.compile(
+            r'.*ClusterName\s*=\s*(\S*).*', re.MULTILINE | re.DOTALL
+        ).match(output):
+            return m[1]
     except FileNotFoundError:
         return hostname()

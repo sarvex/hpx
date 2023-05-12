@@ -28,15 +28,11 @@ class Unordered(object):
 
     def __len__(self):
         table = self.value['table_']
-        if table['buckets_']:
-            return int(table['size_'])
-        else:
-            return 0
+        return int(table['size_']) if table['buckets_'] else 0
 
     def __iter__(self):
         table = self.value['table_']
-        buckets = table['buckets_']
-        if buckets:
+        if buckets := table['buckets_']:
             start_bucket = buckets + table['bucket_count_']
             start_node = start_bucket.dereference()['next_']
             if self.extra_node:
@@ -108,7 +104,7 @@ class Map(Unordered):
             return node['second']
 
         def make_type(self, key, value):
-            return gdb.lookup_type('std::pair<%s, %s>' % (key.const(), value))
+            return gdb.lookup_type(f'std::pair<{key.const()}, {value}>')
 
 class Set(Unordered):
 
@@ -173,95 +169,100 @@ class HPXThread(object):
       return prev_ctx
 
   def __init__(self, thread_data_base):
-    self.base_type   = gdb.lookup_type("hpx::threads::thread_data_base")
-    if thread_data_base.type != self.base_type.pointer():
-      if thread_data_base.type == self.base_type:
-        thread_data_base = thread_data_base.address()
-      else:
-        thread_data_base = thread_data_base.reinterpret_cast(self.base_type.pointer())
+      self.base_type   = gdb.lookup_type("hpx::threads::thread_data_base")
+      if thread_data_base.type != self.base_type.pointer():
+        if thread_data_base.type == self.base_type:
+          thread_data_base = thread_data_base.address()
+        else:
+          thread_data_base = thread_data_base.reinterpret_cast(self.base_type.pointer())
 
-    self.thread_data = thread_data_base.cast(thread_data_base.dynamic_type).dereference()
+      self.thread_data = thread_data_base.cast(thread_data_base.dynamic_type).dereference()
 
-    context_impl = self.thread_data['coroutine_']['m_pimpl']['px']
-    self.stack_end = context_impl['m_stack'] + context_impl['m_stack_size']
-    self.stack_start = context_impl['m_stack']
-    self.m_sp = context_impl['m_sp']
+      context_impl = self.thread_data['coroutine_']['m_pimpl']['px']
+      self.stack_end = context_impl['m_stack'] + context_impl['m_stack_size']
+      self.stack_start = context_impl['m_stack']
+      self.m_sp = context_impl['m_sp']
 
-    assert thread_data_base == context_impl['m_thread_id']
-    self.id = thread_data_base#context_impl['m_thread_id']
-    self.parent_id = self.thread_data['parent_thread_id_']
-    self.description = self.thread_data['description_']
-    self.lco_description = self.thread_data['lco_description_']
+      assert thread_data_base == context_impl['m_thread_id']
+      self.id = thread_data_base#context_impl['m_thread_id']
+      self.parent_id = self.thread_data['parent_thread_id_']
+      self.description = self.thread_data['description_']
+      self.lco_description = self.thread_data['lco_description_']
 
-    current_state = self.thread_data['current_state_']
+      current_state = self.thread_data['current_state_']
 
-    tagged_state_type = current_state.type.template_argument(0)
-    state_enum_type = tagged_state_type.template_argument(0)
-    self.state = current_state['m_storage'] >> 24
-    self.state = self.state.cast(state_enum_type)
+      tagged_state_type = current_state.type.template_argument(0)
+      state_enum_type = tagged_state_type.template_argument(0)
+      self.state = current_state['m_storage'] >> 24
+      self.state = self.state.cast(state_enum_type)
 
-    current_state_ex = self.thread_data['current_state_ex_']
-    tagged_state_ex_type = current_state_ex.type.template_argument(0)
-    state_ex_enum_type = tagged_state_ex_type.template_argument(0)
-    self.state_ex = current_state_ex['m_storage'] >> 24
-    self.state_ex = self.state_ex.cast(state_ex_enum_type)
+      current_state_ex = self.thread_data['current_state_ex_']
+      tagged_state_ex_type = current_state_ex.type.template_argument(0)
+      state_ex_enum_type = tagged_state_ex_type.template_argument(0)
+      self.state_ex = current_state_ex['m_storage'] >> 24
+      self.state_ex = self.state_ex.cast(state_ex_enum_type)
 
-    self.size_t = gdb.lookup_type("std::size_t")
-    stack = self.m_sp.reinterpret_cast(self.size_t)
+      self.size_t = gdb.lookup_type("std::size_t")
+      stack = self.m_sp.reinterpret_cast(self.size_t)
 
-    self.context = self.Context()
-    self.context.pc  = self.deref_stack(stack + (64))
-    self.context.r15 = self.deref_stack(stack + (8 * 0))
-    self.context.r14 = self.deref_stack(stack + (8 * 1))
-    self.context.r13 = self.deref_stack(stack + (8 * 2))
-    self.context.r12 = self.deref_stack(stack + (8 * 3))
-    self.context.rdx = self.deref_stack(stack + (8 * 4))
-    self.context.rax = self.deref_stack(stack + (8 * 5))
-    self.context.rbx = self.deref_stack(stack + (8 * 6))
-    self.context.rbp = self.deref_stack(stack + (8 * 7))
-    self.context.sp  = stack + (8 * 8)
+      self.context = self.Context()
+      self.context.pc  = self.deref_stack(stack + (64))
+      self.context.r15 = self.deref_stack(stack + (8 * 0))
+      self.context.r14 = self.deref_stack(stack + (8 * 1))
+      self.context.r13 = self.deref_stack(stack + (8 * 2))
+      self.context.r12 = self.deref_stack(stack + (8 * 3))
+      self.context.rdx = self.deref_stack(stack + (8 * 4))
+      self.context.rax = self.deref_stack(stack + (8 * 5))
+      self.context.rbx = self.deref_stack(stack + (8 * 6))
+      self.context.rbp = self.deref_stack(stack + (8 * 7))
+      self.context.sp  = stack + (8 * 8)
 
-    prev_context = self.context.switch()
-    frame = gdb.newest_frame()
-    function_name = frame.name()
-    p = re.compile("^hpx::util::coroutines.*$")
+      prev_context = self.context.switch()
+      frame = gdb.newest_frame()
+      function_name = frame.name()
+      p = re.compile("^hpx::util::coroutines.*$")
 
-    try:
-      while p.match(function_name):
-        if frame.older() is None:
-          break
-        frame = frame.older()
-        function_name = frame.name()
+      try:
+          while p.match(function_name):
+            if frame.older() is None:
+              break
+            frame = frame.older()
+            function_name = frame.name()
 
 
-      if not frame.older() is None:
-        frame = frame.older()
-        function_name = frame.name()
+          if frame.older() is not None:
+              frame = frame.older()
+              function_name = frame.name()
 
-      line = frame.function().line
-      filename = frame.find_sal().symtab.filename
+          line = frame.function().line
+          filename = frame.find_sal().symtab.filename
 
-      self.pc_string = "0x%x in " % frame.pc() + "%s at " % function_name + "%s:" % filename + "%d" % line
-    except Exception:
-      self.pc_string = "0x%x in " % frame.pc() + "<unknown>"
+          self.pc_string = (
+              "0x%x in " % frame.pc()
+              + f"{function_name} at "
+              + f"{filename}:"
+              + "%d" % line
+          )
+      except Exception:
+        self.pc_string = "0x%x in " % frame.pc() + "<unknown>"
 
-    self.frame = frame
+      self.frame = frame
 
-    prev_context.switch()
+      prev_context.switch()
 
   def deref_stack(self, addr):
     return addr.reinterpret_cast(self.size_t.pointer()).dereference()
 
   def info(self):
-    print(" Thread 0x%x" % self.id)
-    if self.m_sp.reinterpret_cast(self.m_sp.dereference().type) > self.stack_end:
-      print(" This thread has a stack overflow")
-    print("  parent thread = %s" % self.parent_id)
-    print("  description = " + self.description.string())
-    print("  lco_description = " + self.lco_description.string())
-    print("  state = %s" % self.state)
-    print("  state_ex = %s" % self.state_ex)
-    print("  pc = %s" % self.pc_string)
+      print(" Thread 0x%x" % self.id)
+      if self.m_sp.reinterpret_cast(self.m_sp.dereference().type) > self.stack_end:
+        print(" This thread has a stack overflow")
+      print(f"  parent thread = {self.parent_id}")
+      print(f"  description = {self.description.string()}")
+      print(f"  lco_description = {self.lco_description.string()}")
+      print(f"  state = {self.state}")
+      print(f"  state_ex = {self.state_ex}")
+      print(f"  pc = {self.pc_string}")
 
 class HPXListThreads(gdb.Command):
   '''
@@ -274,63 +275,60 @@ class HPXListThreads(gdb.Command):
     return addr.reinterpret_cast(gdb.lookup_type("std::size_t").pointer()).dereference()
 
   def invoke(self, arg, from_tty):
-    #gdb.selected_frame().read_var("hpx::runtime::runtime_")
-    runtime = gdb.lookup_global_symbol("hpx::runtime::runtime_").value()["ptr_"].dereference()
-    #gdb.selected_frame().read_var("hpx::runtime::runtime_.ptr_").dereference()#["ptr_"]
-    thread_manager_ptr = runtime.cast(runtime.dynamic_type)["thread_manager_"]['px']
-    thread_manager = thread_manager_ptr.cast(thread_manager_ptr.dynamic_type).dereference();
+      #gdb.selected_frame().read_var("hpx::runtime::runtime_")
+      runtime = gdb.lookup_global_symbol("hpx::runtime::runtime_").value()["ptr_"].dereference()
+      #gdb.selected_frame().read_var("hpx::runtime::runtime_.ptr_").dereference()#["ptr_"]
+      thread_manager_ptr = runtime.cast(runtime.dynamic_type)["thread_manager_"]['px']
+      thread_manager = thread_manager_ptr.cast(thread_manager_ptr.dynamic_type).dereference();
 
-    scheduler = thread_manager['pool_']['sched_']
-    scheduler_type = scheduler.type.target()#.target()
+      scheduler = thread_manager['pool_']['sched_']
+      scheduler_type = scheduler.type.target()#.target()
 
-    queues = {}
-    for f in scheduler_type.fields():
-      if f.name == "high_priority_queues_":
-        queues[f.name] = scheduler[f.name]
-      if f.name == "low_priority_queue_":
-        queues[f.name] = scheduler[f.name]
-      if f.name == "queues_":
-        queues[f.name] = scheduler[f.name]
+      queues = {
+          f.name: scheduler[f.name]
+          for f in scheduler_type.fields()
+          if f.name
+          in ["high_priority_queues_", "low_priority_queue_", "queues_"]
+      }
+      for name in queues:
+          if name == "high_priority_queues_":
+              item = queues[name]['_M_impl']['_M_start']
+              end = queues[name]['_M_impl']['_M_finish']
 
-    for name in queues:
-      if name == "queues_":
-        item = queues[name]['_M_impl']['_M_start']
-        end = queues[name]['_M_impl']['_M_finish']
+              count = 0
+              while item != end:
+                  print("High Priority Thread queue %d:" % count)
+                  thread_map = Set(item.dereference().dereference()['thread_map_'])
+                  for k, v in thread_map:
+                    thread = HPXThread(v['px'])
 
-        count = 0
-        while not item == end:
-          print("Thread queue %d:" % count)
-          thread_map = Set(item.dereference().dereference()['thread_map_'])
-          for k, v in thread_map:
-            thread = HPXThread(v['px'])
+                    thread.info()
+                    print("")
+                  item = item + 1
+                  count = count + 1
 
-            thread.info()
-            print("")
-          item = item + 1
-          count = count + 1
-      if name == "high_priority_queues_":
-        item = queues[name]['_M_impl']['_M_start']
-        end = queues[name]['_M_impl']['_M_finish']
+          elif name == "queues_":
+              item = queues[name]['_M_impl']['_M_start']
+              end = queues[name]['_M_impl']['_M_finish']
 
-        count = 0
-        while not item == end:
-          print("High Priority Thread queue %d:" % count)
-          thread_map = Set(item.dereference().dereference()['thread_map_'])
-          for k, v in thread_map:
-            thread = HPXThread(v['px'])
+              count = 0
+              while item != end:
+                  print("Thread queue %d:" % count)
+                  thread_map = Set(item.dereference().dereference()['thread_map_'])
+                  for k, v in thread_map:
+                    thread = HPXThread(v['px'])
 
-            thread.info()
-            print("")
-          item = item + 1
-          count = count + 1
+                    thread.info()
+                    print("")
+                  item = item + 1
+                  count = count + 1
+      print("Low priority queue:")
+      thread_map = Set(queues["low_priority_queue_"]['thread_map_'])
+      for k, v in thread_map:
+        thread = HPXThread(v['px'])
 
-    print("Low priority queue:")
-    thread_map = Set(queues["low_priority_queue_"]['thread_map_'])
-    for k, v in thread_map:
-      thread = HPXThread(v['px'])
-
-      thread.info()
-      print("")
+        thread.info()
+        print("")
 
 class HPXGdbState(object):
   def __init__(self):
@@ -348,18 +346,18 @@ class HPXGdbState(object):
     self.context[os_thread] = ctx
 
   def restore(self):
-    self.lock.acquire()
-    cur_os_thread = gdb.selected_thread().num
-    try:
-      if not self.context is None:
-        for os_thread in self.context:
-          ctx = self.context[os_thread]
-          gdb.execute("thread %d" % os_thread, False, True)
-          ctx.switch()
-        self.context = None
-    finally:
-      gdb.execute("thread %d" % cur_os_thread, False, True)
-      self.lock.release()
+      self.lock.acquire()
+      cur_os_thread = gdb.selected_thread().num
+      try:
+          if self.context is not None:
+              for os_thread in self.context:
+                ctx = self.context[os_thread]
+                gdb.execute("thread %d" % os_thread, False, True)
+                ctx.switch()
+              self.context = None
+      finally:
+          gdb.execute("thread %d" % cur_os_thread, False, True)
+          self.lock.release()
 
 state = HPXGdbState()
 
@@ -406,38 +404,37 @@ class HPXContinue(gdb.Command):
     super(HPXContinue, self).__init__("hpx continue", gdb.COMMAND_USER, gdb.COMPLETE_NONE, False)
 
   def invoke(self, arg, from_tty):
-    argv = gdb.string_to_argv(arg)
-    state.restore()
+      argv = gdb.string_to_argv(arg)
+      state.restore()
 
-    #gdb.execute("thread 15", False, True)
-    #cur_os_thread = gdb.selected_thread().num
+      #gdb.execute("thread 15", False, True)
+      #cur_os_thread = gdb.selected_thread().num
 
-    frame = gdb.newest_frame()
+      frame = gdb.newest_frame()
 
-    handle_attach = False
-    count = 0
-    while True:
-        function = frame.function()
-        if function and function.name == "hpx::util::command_line_handling::handle_attach_debugger()":
-          handle_attach = True
-          break
-        frame = frame.older()
-        if not frame or count > 5:
-          break
-        count = count + 1
+      handle_attach = False
+      count = 0
+      while True:
+          function = frame.function()
+          if function and function.name == "hpx::util::command_line_handling::handle_attach_debugger()":
+            handle_attach = True
+            break
+          frame = frame.older()
+          if not frame or count > 5:
+            break
+          count = count + 1
 
-    if handle_attach:
-      frame.select()
-      gdb.execute("set var i = 1", True)
+      if handle_attach:
+        frame.select()
+        gdb.execute("set var i = 1", True)
 
 
-    #gdb.execute("thread %d" % cur_os_thread, False, True)
+        #gdb.execute("thread %d" % cur_os_thread, False, True)
 
-    if len(argv) == 0:
-      print("Continuing...")
-      gdb.execute("continue")
-    else:
-      if argv[0] != "hook":
+      if len(argv) == 0:
+          print("Continuing...")
+          gdb.execute("continue")
+      elif argv[0] != "hook":
           print("wrong argument ...")
 
 HPX()

@@ -53,6 +53,7 @@ def autolink_generic(pattern):
         else:
             shown_text = text_parts[0]
             url = pattern % (text_parts[0], text_parts[0])
-        node = nodes.reference(rawtext, "std::" + shown_text, refuri=url, **options)
+        node = nodes.reference(rawtext, f"std::{shown_text}", refuri=url, **options)
         return [node], []
+
     return role

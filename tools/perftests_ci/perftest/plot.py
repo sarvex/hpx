@@ -82,11 +82,7 @@ class _ConfidenceInterval(typing.NamedTuple):
             return '-'
         if 0.1 >= self.upper >= 0.05:
             return '--'
-        if self.upper >= 0.1:
-            return '---'
-
-        # no idea
-        return '???'
+        return '---' if self.upper >= 0.1 else '???'
 
     def significant(self):
         return '=' not in self.classify()
@@ -120,8 +116,8 @@ class _ConfidenceInterval(typing.NamedTuple):
 
 
 def _add_comparison_table(report, cis):
-    names = list(sorted(set(k.name for k in cis.keys())))
-    executors = list(sorted(set(k.executor for k in cis.keys())))
+    names = list(sorted({k.name for k in cis.keys()}))
+    executors = list(sorted({k.executor for k in cis.keys()}))
     exitcode = 0
 
     def css_class(classification):
@@ -212,7 +208,7 @@ def _histogram_plot(title, before, after, output):
 def _add_comparison_plots(report, before_outs, after_outs, cis):
     with report.image_grid('Details') as grid:
         for k, ci in cis.items():
-            title = (str(k) + ': ' + str(ci))
+            title = f'{str(k)}: {str(ci)}'
             _histogram_plot(title, before_outs[k], after_outs[k],
                                 grid.image())
 
@@ -224,7 +220,7 @@ def _add_info(report, labels, data):
 
         for k in {k for d in data for k in d[var._project_name].keys()}:
             with table.row() as row:
-                row.cell(var._project_name + ' ' + k.title())
+                row.cell(f'{var._project_name} {k.title()}')
                 for d in data:
                     row.cell(d[var._project_name].get(k, '—'))
 
@@ -252,7 +248,7 @@ def compare_one(report, before, after, output):
 def compare_all(results, references, output):
     index = 0
     global_exitcode = 0
-    title = var._project_name + ' Performance'
+    title = f'{var._project_name} Performance'
     with html.Report(output, title) as report:
         for res in results:
             ref = references[index]
@@ -339,7 +335,7 @@ def _history_plot(title, dates, measurements, output):
 
 
 def history(data, output, key='job', limit=None):
-    title = var._project_name + ' Performance History'
+    title = f'{var._project_name} Performance History'
     with html.Report(output, title) as report:
         dates, measurements = _history_data(data, key, limit)
 

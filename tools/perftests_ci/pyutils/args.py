@@ -51,13 +51,14 @@ class Command:
 
     @property
     def _command_name(self):
-        return '_command_' + self.func.__name__
+        return f'_command_{self.func.__name__}'
 
     def command(self, **kwargs):
         def inner(func):
             if self.subparsers is None:
                 self.subparsers = self.parser.add_subparsers(
-                    dest=self.func.__name__ + ' subcommand')
+                    dest=f'{self.func.__name__} subcommand'
+                )
                 self.subparsers.required = True
 
             parser = self.subparsers.add_parser(

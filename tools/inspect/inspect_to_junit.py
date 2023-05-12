@@ -36,11 +36,9 @@ def parse_inspect8_log(fh):
     errors = []
 
     for line in fh:
-        m = line_pattern.match(line)
-        if m:
-            for message in split_pattern.split(m.group(2)):
-                error = error_item(filename=m.group(1),
-                                   message=stipper_pattern.sub('', message))
+        if m := line_pattern.match(line):
+            for message in split_pattern.split(m[2]):
+                error = error_item(filename=m[1], message=stipper_pattern.sub('', message))
                 errors.append(error)
 
     return errors

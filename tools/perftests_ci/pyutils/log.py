@@ -48,7 +48,7 @@ def exception_logging():
     try:
         yield
     except Exception:
-        _logger.exception(f'{"Fatal error: exception was raised"}')
+        _logger.exception('Fatal error: exception was raised')
         sys.exit(1)
 
 
@@ -57,12 +57,11 @@ def _format_message(message, details):
     if details is None:
         return message
     details = str(details)
-    if details.count('\n') == 0:
-        if details.strip() == '':
-            details = '[EMPTY]'
-        return message + ': ' + details
-    else:
+    if '\n' in details:
         return message + ':\n' + textwrap.indent(details, '    ')
+    if not details.strip():
+        details = '[EMPTY]'
+    return f'{message}: {details}'
 
 
 def debug(message, details=None):

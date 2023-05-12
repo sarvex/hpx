@@ -35,14 +35,14 @@ import matplotlib.pyplot as plt
 
 #----------------------------------------------------------------------------
 # setup default size of plot if user didn't pass fig_size command line option
-try :
+try:
     size = list(map(float, options.fig_size.split(',')))
-    if len(size) == 2 :
+    if len(size) == 2:
         print("found size ", size)
         options.fig_size = (size, [0.1, 0.1, 0.85, 0.85])
-    elif len(size) == 6 :
-        options.fig_size = (size[0:2], size[2:6])
-    else :
+    elif len(size) == 6:
+        options.fig_size = size[:2], size[2:6]
+    else:
         raise ValueError("--fig-size must be a string of 2 or 6 numbers")
 except :
     options.fig_size = ([12, 9], [0.08, 0.14, 0.91, 0.83])
@@ -77,7 +77,7 @@ def sizeof_bytes(num):
 # each series is a array, there are N arrays in the supplied map
 # graph_map, a map of arrays of {x,y,other} data
 # labelstrings, {xaxis, yaxis, series_variable}
-def plot_one_collection(graph_map, labelstrings, axes, axisfunction, minmax) :
+def plot_one_collection(graph_map, labelstrings, axes, axisfunction, minmax):
     print("Plotting %i series of '%s'" % (len(graph_map), labelstrings[2]))
 
     # for convenience/brevity get the base, min, max for each exis
@@ -94,7 +94,7 @@ def plot_one_collection(graph_map, labelstrings, axes, axisfunction, minmax) :
     localmarkers = itertools.cycle(markers)
     localcolours = itertools.cycle(colours)
     series_keys = sorted(graph_map.keys())
-    for index, value in enumerate(series_keys):
+    for value in series_keys:
         key = value
         series = sorted(graph_map[key])
         #print "The series is ", series
@@ -107,41 +107,38 @@ def plot_one_collection(graph_map, labelstrings, axes, axisfunction, minmax) :
             axes.plot(*list(zip(*values)), markersize=8, marker=next(localmarkers), color=next(localcolours))
         elif (xb!=0) and (yb==0):
             axes.semilogx(*list(zip(*values)), basex=xb, markersize=8, marker=next(localmarkers), color=next(localcolours))
-        elif (xb==0) and (yb!=0):
+        elif xb == 0:
             axes.semilogy(*list(zip(*values)), basey=yb, markersize=8, marker=next(localmarkers), color=next(localcolours))
-        elif (xb!=0) and (yb!=0):
-            axes.loglog(*list(zip(*values)), basex=xb, basey=yb, markersize=8, marker=next(localmarkers), color=next(localcolours))
         else:
-          print("Error, unsupported log/lin options")
-
+            axes.loglog(*list(zip(*values)), basex=xb, basey=yb, markersize=8, marker=next(localmarkers), color=next(localcolours))
     # generate labels for each power of N on the axes
     if (xb!=0):
-      # generate a list of numbers for the grid marks
-      xlabels = tuple(i for i in (xb**x for x in range(x1,x2+1)) )
-      # setup the xaxis parameters
-      axes.set_xlim(minimum(xlabels,1)*(1.0-xm), maximum(xlabels,3)*(1.0+xm))
-      axes.set_xticklabels(xlabels)
-      axes.set_xscale('log', basex=xb)
-      axes.xaxis.set_major_formatter(matplotlib.ticker.FuncFormatter(axisfunction))
-      axes.set_xlabel(labelstrings[0])
-      axes.tick_params(axis='x', which='major', labelsize=9)
-      axes.tick_params(axis='x', which='minor', labelsize=8)
+              # generate a list of numbers for the grid marks
+        xlabels = tuple((xb**x for x in range(x1,x2+1)))
+        # setup the xaxis parameters
+        axes.set_xlim(minimum(xlabels,1)*(1.0-xm), maximum(xlabels,3)*(1.0+xm))
+        axes.set_xticklabels(xlabels)
+        axes.set_xscale('log', basex=xb)
+        axes.xaxis.set_major_formatter(matplotlib.ticker.FuncFormatter(axisfunction))
+        axes.set_xlabel(labelstrings[0])
+        axes.tick_params(axis='x', which='major', labelsize=9)
+        axes.tick_params(axis='x', which='minor', labelsize=8)
     else:
-      axes.set_xlim(x1, x2)
+        axes.set_xlim(x1, x2)
 
     if (yb!=0):
-      # generate a list of numbers for the grid marks
-      ylabels = tuple(i for i in (yb**y for y in range(y1,y2+1)) )
-      # setup the yaxis parameters
-      axes.set_ylim(minimum(ylabels,1)*(1.0-ym), maximum(ylabels,3)*(1.0+ym))
-      axes.set_yticklabels(ylabels)
-      axes.set_yscale('log', basey=yb)
-      axes.yaxis.set_major_formatter(matplotlib.ticker.FuncFormatter(lambda x, pos: str('%.2f' % x)))
-      axes.set_ylabel(labelstrings[1])
-      axes.tick_params(axis='y', which='major', labelsize=9)
-      axes.tick_params(axis='y', which='minor', labelsize=8)
+              # generate a list of numbers for the grid marks
+        ylabels = tuple((yb**y for y in range(y1,y2+1)))
+        # setup the yaxis parameters
+        axes.set_ylim(minimum(ylabels,1)*(1.0-ym), maximum(ylabels,3)*(1.0+ym))
+        axes.set_yticklabels(ylabels)
+        axes.set_yscale('log', basey=yb)
+        axes.yaxis.set_major_formatter(matplotlib.ticker.FuncFormatter(lambda x, pos: str('%.2f' % x)))
+        axes.set_ylabel(labelstrings[1])
+        axes.tick_params(axis='y', which='major', labelsize=9)
+        axes.tick_params(axis='y', which='minor', labelsize=8)
     else:
-      axes.set_ylim(y1, y2)
+        axes.set_ylim(y1, y2)
     axes.xaxis.grid(True)
     axes.yaxis.grid(True)
 
@@ -158,7 +155,7 @@ def plot_one_collection(graph_map, labelstrings, axes, axisfunction, minmax) :
     axes.set_title(labelstrings[2], fontsize=10)
 
 #----------------------------------------------------------------------------
-def plot_configuration(graph_map, mapnames, axesnames, titlefunction, legendfunction, legendtitlefunction, axisfunction, minmax, bbox) :
+def plot_configuration(graph_map, mapnames, axesnames, titlefunction, legendfunction, legendtitlefunction, axisfunction, minmax, bbox):
 
     fig = plt.figure(figsize = options.fig_size[0])
     axes = []
@@ -193,67 +190,78 @@ def plot_configuration(graph_map, mapnames, axesnames, titlefunction, legendfunc
     col = 0
     graph_keys = sorted(graph_map.keys())
     for param1_i in range(num_param1):
-      param1_key     = graph_keys[param1_i]
-      param1_results = graph_map[param1_key]
-      param1_keys    = sorted(param1_results.keys())
-      print("param1_ type ", param1_key)
+        param1_key     = graph_keys[param1_i]
+        param1_results = graph_map[param1_key]
+        param1_keys    = sorted(param1_results.keys())
+        print("param1_ type ", param1_key)
 
-      # The legend must cover all graphs, not just the final one plotted
-      legend_entries = []
+        # The legend must cover all graphs, not just the final one plotted
+        legend_entries = []
 
-      for param2_i in range(num_param2):
-        newplot = plt.subplot2grid((numrows, numcols), (row, col), colspan=1)
-        axes.append( newplot )
-        try:
-          print("num params %i and keys" % num_param2, param1_keys)
-          param2_key     = param1_keys[param2_i]
-          param2_results = param1_results[param2_key]
-          param2_keys    = sorted(param2_results.keys())
-          print("param2_ type ", param2_key)
-          print("generating plot at {%i,%i}" % (row, col))
-          plot_one_collection(param2_results,
-            [axesnames[0], axesnames[1], mapnames[1] + " " + titlefunction(param2_key)],
-            newplot,axisfunction, minmax)
+        for param2_i in range(num_param2):
+            newplot = plt.subplot2grid((numrows, numcols), (row, col), colspan=1)
+            axes.append( newplot )
+            try:
+                print("num params %i and keys" % num_param2, param1_keys)
+                param2_key     = param1_keys[param2_i]
+                param2_results = param1_results[param2_key]
+                param2_keys    = sorted(param2_results.keys())
+                print("param2_ type ", param2_key)
+                print("generating plot at {%i,%i}" % (row, col))
+                plot_one_collection(
+                    param2_results,
+                    [
+                        axesnames[0],
+                        axesnames[1],
+                        f"{mapnames[1]} {titlefunction(param2_key)}",
+                    ],
+                    newplot,
+                    axisfunction,
+                    minmax,
+                )
 
-          # merge lists for the legend
-          legend_entries = list(set(legend_entries) | set(param2_keys))
+                # merge lists for the legend
+                legend_entries = list(set(legend_entries) | set(param2_keys))
 
-        except:
-          print("Failed to plot {%i,%i}" % (row, col))
+            except:
+              print("Failed to plot {%i,%i}" % (row, col))
+            col += 1
+            if ((col % numcols)==0):
+              col = 0
+              row += 1
+
+        legend_entries = sorted(legend_entries)
+        # at the end of each param2 group, there should be a legend
+        leg = plt.subplot2grid((numrows, numcols), (row, col), colspan=1)
+        leg.axis('off')
+        leg.set_title(legendtitlefunction(param1_key))
+        print("Legend title removed ")
+        #leg.set_title(graph_keys[param1_i], fontsize=11)
+        axes.append( leg )
+        # restart markers and colours from beginning of list for each new graph
+        localmarkers = itertools.cycle(markers)
+        localcolours = itertools.cycle(colours)
+        for item in legend_entries:
+            leg.plot(
+                [],
+                label=f"{mapnames[2]} {legendfunction(item)}",
+                markersize=8,
+                marker=next(localmarkers),
+                color=next(localcolours),
+            )
+        leg.legend(
+          loc = 'lower left',
+          ncol=(1,1)[len(legend_entries)>5],
+          bbox_to_anchor=(bbox[0],bbox[1]),
+          fontsize=8,
+          handlelength=3, borderpad=1.2, labelspacing=1.2,
+          shadow=True)
+        print("added legend at {%i,%i}" % (row, col))
         col += 1
+        # if we reach the end of the graph row
         if ((col % numcols)==0):
           col = 0
           row += 1
-
-      legend_entries = sorted(legend_entries)
-      # at the end of each param2 group, there should be a legend
-      leg = plt.subplot2grid((numrows, numcols), (row, col), colspan=1)
-      leg.axis('off')
-      leg.set_title(legendtitlefunction(param1_key))
-      print("Legend title removed ")
-      #leg.set_title(graph_keys[param1_i], fontsize=11)
-      axes.append( leg )
-      # restart markers and colours from beginning of list for each new graph
-      localmarkers = itertools.cycle(markers)
-      localcolours = itertools.cycle(colours)
-      for item in legend_entries:
-        leg.plot([], label=mapnames[2] + " " + legendfunction(item),
-        markersize=8,
-        marker=next(localmarkers),
-        color=next(localcolours))
-      leg.legend(
-        loc = 'lower left',
-        ncol=(1,1)[len(legend_entries)>5],
-        bbox_to_anchor=(bbox[0],bbox[1]),
-        fontsize=8,
-        handlelength=3, borderpad=1.2, labelspacing=1.2,
-        shadow=True)
-      print("added legend at {%i,%i}" % (row, col))
-      col += 1
-      # if we reach the end of the graph row
-      if ((col % numcols)==0):
-        col = 0
-        row += 1
 
     plt.tight_layout()
     if options.show_graph :
@@ -261,27 +269,27 @@ def plot_configuration(graph_map, mapnames, axesnames, titlefunction, legendfunc
     return fig
 
 #----------------------------------------------------------------------------
-def insert_safe(a_map, key1, key2, key3, value) :
-  #print(key1,key2,key3,value[0],value[1])
-  found = False
+def insert_safe(a_map, key1, key2, key3, value):
+    #print(key1,key2,key3,value[0],value[1])
+    found = False
 
-  # create the 3 level deep map entries if they are not present
-  if not (key1) in a_map:
-    a_map[key1] = {}
-  if not (key2) in a_map[key1]:
-    a_map[key1][key2] = {}
-  if not (key3) in a_map[key1][key2]:
-    a_map[key1][key2][key3] = []
+      # create the 3 level deep map entries if they are not present
+    if key1 not in a_map:
+        a_map[key1] = {}
+    if key2 not in a_map[key1]:
+        a_map[key1][key2] = {}
+    if key3 not in a_map[key1][key2]:
+        a_map[key1][key2][key3] = []
 
-  for item in a_map[key1][key2][key3]:
-    if item[0] == value[0]:
-      item[1] = item[1]+value[1]
-      item[2] += 1
-      found = True;
-      print(key1,key2,key3,value[0],value[1], "Duplicate", item[2])
-      break
-  if (not found):
-    a_map[key1][key2][key3].append(value + [1])
+    for item in a_map[key1][key2][key3]:
+      if item[0] == value[0]:
+        item[1] = item[1]+value[1]
+        item[2] += 1
+        found = True;
+        print(key1,key2,key3,value[0],value[1], "Duplicate", item[2])
+        break
+    if (not found):
+      a_map[key1][key2][key3].append(value + [1])
 
 #----------------------------------------------------------------------------
 def average_map(a_map) :

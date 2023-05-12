@@ -21,7 +21,7 @@ def mkdirp(absolute_path_file):
     if nested_dir != '' and not os.path.exists(nested_dir):
             os.makedirs(nested_dir)
 
-@args.command(description='main script for '+ var._project_name +' pyutils')
+@args.command(description=f'main script for {var._project_name} pyutils')
 @args.arg('--verbose',
           '-v',
           action='count',
@@ -34,7 +34,7 @@ def driver(verbose, logfile):
         log.log_to_file(logfile)
 
 
-@driver.command(description='build '+ var._project_name)
+@driver.command(description=f'build {var._project_name}')
 @args.arg('--cmake-only',
           action='store_true',
           help='only execute CMake but do not build')
@@ -42,7 +42,7 @@ def driver(verbose, logfile):
 @args.arg('--build-type', '-b', choices=['release', 'debug'], required=True)
 @args.arg('--environment', '-e', nargs='?', help='path to environment file')
 @args.arg('--install-dir', '-i', help='install directory')
-@args.arg('--source-dir', help= var._project_name +' source directory')
+@args.arg('--source-dir', help=f'{var._project_name} source directory')
 @args.arg('--target', '-t', nargs='+', help='make targets to build')
 def build(build_type, environment, target, source_dir, build_dir, install_dir,
           cmake_only):
@@ -75,7 +75,7 @@ except ImportError:
 
 if buildinfo:
 
-    @driver.command(description='run '+ var._project_name +' tests')
+    @driver.command(description=f'run {var._project_name} tests')
     @args.arg('--run-mpi-tests',
               '-m',
               action='store_true',
@@ -89,10 +89,7 @@ if buildinfo:
     @args.arg('--examples-build-dir',
               help='build directory for examples',
               default=os.path.join(buildinfo.binary_dir, 'examples_build'))
-    @args.arg('--build-examples',
-              '-b',
-              action='store_true',
-              help='enable building of '+ var._project_name +' examples')
+    @args.arg('--build-examples', '-b', action='store_true', help=f'enable building of {var._project_name} examples')
     def test(run_mpi_tests, perftests_only, verbose_ctest, examples_build_dir,
              build_examples):
         import test
@@ -157,7 +154,7 @@ def compare(output, references, results):
     mkdirp(output)
     from perftest import plot
     exitcode = plot.compare_all(results, references, output)
-    print("exit code in compare function " + str(exitcode))
+    print(f"exit code in compare function {str(exitcode)}")
     raise SystemExit(exitcode)
 
 @plot.command(description='plot performance history')

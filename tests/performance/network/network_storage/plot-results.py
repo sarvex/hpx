@@ -68,39 +68,41 @@ average_map(T_B_RW_NB)
 
 ##-------------------------------------------------------------------
 ## PLOT x-axis{Nodes}, y-axis{BW},
-fig_T_RW_B_NB  = plot_configuration(T_RW_B_NB,
-  ["Threads", "Mode", "Block size"],
-  ["Nodes", "BW GB/s"],
-  lambda x: "Read" if (x==1) else "Write",      # Plot title
-  lambda x: sizeof_bytes(x),                    # Legend text
-  lambda x: "Threads = " + str(int(x)),                        # legend title
-  lambda x,pos: str(int(x)),                    # X Axis labels
-  [[2,0,12,0.0], [2,0,13,0.0]],                 # minmax (base, min, max, padding)
-  [0.0, 0.0]                                    # legend offset
-  )
+fig_T_RW_B_NB = plot_configuration(
+    T_RW_B_NB,
+    ["Threads", "Mode", "Block size"],
+    ["Nodes", "BW GB/s"],
+    lambda x: "Read" if (x == 1) else "Write",
+    lambda x: sizeof_bytes(x),
+    lambda x: f"Threads = {int(x)}",
+    lambda x, pos: str(int(x)),
+    [[2, 0, 12, 0.0], [2, 0, 13, 0.0]],
+    [0.0, 0.0],
+)
 graphs_to_save.append([fig_T_RW_B_NB,"fig_T_RW_B_NB"])
 
 ##-------------------------------------------------------------------
 ## PLOT x-axis{Nodes}, y-axis{BW},
-fig_T_B_RW_NB  = plot_configuration(T_B_RW_NB,
-  ["Threads", "Block size", "Mode"],
-  ["Nodes", "BW GB/s"],
-  lambda x: sizeof_bytes(x),                    # Plot title
-  lambda x: "Read" if (x==1) else "Write",                  # Legend text
-  lambda x: "Threads = " + str(int(x)),                        # legend title
-  lambda x,pos: str(int(x)),                    # X Axis labels
-  [[2,0,12,0.0], [2,0,13,0.0]],                 # minmax (base, min, max, padding)
-  [0.0, 0.0]                                    # legend offset
-  )
+fig_T_B_RW_NB = plot_configuration(
+    T_B_RW_NB,
+    ["Threads", "Block size", "Mode"],
+    ["Nodes", "BW GB/s"],
+    lambda x: sizeof_bytes(x),
+    lambda x: "Read" if (x == 1) else "Write",
+    lambda x: f"Threads = {int(x)}",
+    lambda x, pos: str(int(x)),
+    [[2, 0, 12, 0.0], [2, 0, 13, 0.0]],
+    [0.0, 0.0],
+)
 graphs_to_save.append([fig_T_B_RW_NB,"fig_T_B_RW_NB"])
 
 ##-------------------------------------------------------------------
 # save plots to png and svg
 for fig in graphs_to_save:
-  svg_name = base + "." + fig[1] + ".svg"
-  png_name = base + "." + fig[1] + ".png"
-  print("Writing %s" % svg_name)
-  fig[0].savefig(svg_name)
+    svg_name = f"{base}.{fig[1]}.svg"
+    png_name = f"{base}.{fig[1]}.png"
+    print(f"Writing {svg_name}")
+    fig[0].savefig(svg_name)
   #fig[0].savefig(png_name)
 
 #-------------------------------------------------------------------

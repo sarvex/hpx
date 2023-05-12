@@ -9,10 +9,11 @@ file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 create_component_skeleton.py - A tool to generate a component skeleton
 '''
 
+
 import sys, os
 
 if len(sys.argv) != 2:
-    print('Usage: %s <component_name>' % sys.argv[0])
+    print(f'Usage: {sys.argv[0]} <component_name>')
     print('Generates the skeleton for component_name in the current working directory')
     sys.exit(1)
 
@@ -23,14 +24,14 @@ header_str = '=' * len(component_name)
 # CMake minimum version
 cmake_version = '3.18'
 
-cmake_header = f'''# Copyright (c) 2019-2022 The STE||AR-Group
+cmake_header = '''# Copyright (c) 2019-2022 The STE||AR-Group
 #
 # SPDX-License-Identifier: BSL-1.0
 # Distributed under the Boost Software License, Version 1.0. (See accompanying
 # file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 '''
 
-root_cmakelists_template = cmake_header + f'''
+root_cmakelists_template = f'''{cmake_header}
 set({component_name}_headers)
 
 set({component_name}_sources)
@@ -46,7 +47,7 @@ add_hpx_component({component_name}
 )
 '''
 
-examples_cmakelists_template = cmake_header + f'''
+examples_cmakelists_template = f'''{cmake_header}
 if (HPX_WITH_TESTS AND HPX_WITH_TESTS_EXAMPLES)
   add_hpx_pseudo_target(tests.examples.components.{component_name})
   add_hpx_pseudo_dependencies(tests.examples.components tests.examples.components.{component_name})
@@ -54,7 +55,7 @@ endif()
 
 '''
 
-tests_cmakelists_template = cmake_header + f'''
+tests_cmakelists_template = f'''{cmake_header}
 include(HPX_Option)
 
 if (HPX_WITH_TESTS_UNIT)
@@ -144,7 +145,7 @@ cwd = os.getcwd()
 components = sorted([ component for component in os.listdir(cwd) if os.path.isdir(component) ])
 
 # Adapting top level CMakeLists.txt
-components_cmakelists = cmake_header + f'''
+components_cmakelists = f'''{cmake_header}
 # This file is auto generated. Please do not edit manually.
 '''
 
